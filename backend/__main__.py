@@ -7,21 +7,9 @@ from datetime import timedelta
 from multiprocessing import current_process, cpu_count
 
 from .argparser import parse_args
-from .constants import VKAPI_URL, VKAPI_VERSION, APP_ACCESS_KEY
+from .constants import VKAPI_URL, VKAPI_VERSION, VKAPI_TOKEN
 from .utils import get_page_id, VKApiError, pretty_print
 from .post import Post
-
-
-import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="[\033[92m%(levelname)s %(asctime)s\033[0m]: %(message)s",
-    datefmt="%m/%d/%Y %I:%M:%S %p",
-)
-# Removing noisy debug messages from lib request
-logging.getLogger("urllib3").setLevel(logging.CRITICAL)
-logger = logging.getLogger()
 
 
 class PostDownloader:
@@ -31,7 +19,7 @@ class PostDownloader:
         self.request_params = {
             "owner_id": self.page_id,
             "v": VKAPI_VERSION,
-            "access_token": APP_ACCESS_KEY,
+            "access_token": VKAPI_TOKEN,
         }
         self.from_date = from_date or datetime.date.min
         self.to_date = to_date or datetime.date.max
