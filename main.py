@@ -4,7 +4,7 @@ import time
 
 from backend.constants import VKAPI_TOKEN, VKAPI_VERSION, VKAPI_URL
 from backend.post_fetcher import PostFetcher
-from backend.vkscript import GET_2500_POSTS_TEMPLATE
+from backend.vkscript import GET_POSTS_TEMPLATE
 
 
 if __name__ == "__main__":
@@ -13,7 +13,7 @@ if __name__ == "__main__":
     start = time.perf_counter()
     post_fetcher = PostFetcher(domain)
 
-    # posts = post_fetcher.fetch_posts_synchronously()
-    # duration = time.perf_counter() - start
-    # print(duration)
-    # # pprint(posts)
+    posts = post_fetcher.fetch_posts_synchronously()
+    duration = time.perf_counter() - start
+    print(duration)
+    # pprint(posts)

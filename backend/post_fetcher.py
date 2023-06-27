@@ -4,7 +4,7 @@ import fastapi as _fastapi
 
 from backend.logger import logger
 from backend.constants import VKAPI_TOKEN, VKAPI_VERSION, VKAPI_URL
-from backend.vkscript import GET_2500_POSTS_TEMPLATE
+from backend.vkscript import GET_POSTS_TEMPLATE
 
 
 @dataclass
@@ -57,21 +57,30 @@ class PostFetcher:
 
         current_offset = 0
         while len(fetched_posts) < self._total_posts:
-            vks_code = GET_2500_POSTS_TEMPLATE.substitute(
-                {"domain": self.domain, "offset": current_offset}
+            vks_code = GET_POSTS_TEMPLATE.substitute(
+                {"domain": self.domain, "offset": current_offset, "count": 100}
             )
 
             params = {"v": VKAPI_VERSION, "access_token": VKAPI_TOKEN, "code": vks_code}
-            response = requests.get(
-                VKAPI_URL + "execute",
-                params=params,
-                timeout=60,
-            ).json()
+            while True:
+                response = requests.get(
+                    VKAPI_URL + "execute",
+                    params=params,
+                    timeout=60,
+                ).json()
 
-            if "error" in response:
-                raise _fastapi.HTTPException(
-                    status_code=500, detail=response["error"]["error_msg"]
-                )
+                # If too many requests per second, we'll just wait a bit.
+                if "error" in response:
+                    error = response["error"]
+
+                    if error["error_code"] == 6:
+                        logger.error(f'{error["error_msg"]}')
+                        continue
+
+                    raise _fastapi.HTTPException(
+                        status_code=500, detail=response["error"]["error_msg"]
+                    )
+                break
 
             fetched_posts.extend(response["response"]["items"])
             current_offset += 2500
