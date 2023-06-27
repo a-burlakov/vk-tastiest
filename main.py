@@ -10,12 +10,20 @@ from backend.vkscript import GET_POSTS_TEMPLATE
 
 async def fetch_posts():
     domain = "te_ekb"
-    start = time.perf_counter()
+    # domain = "repouiii"
     post_fetcher = PostFetcher(domain)
+
+    start = time.perf_counter()
     posts = await post_fetcher.fetch_posts_asynchronously()
     duration = time.perf_counter() - start
     print(duration)
-    pprint(len(posts))
+
+    start = time.perf_counter()
+    posts = post_fetcher.fetch_posts_synchronously()
+    duration = time.perf_counter() - start
+    print(duration)
+
+    # pprint(len(posts))
 
 
 if __name__ == "__main__":

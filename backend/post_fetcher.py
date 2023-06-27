@@ -18,7 +18,6 @@ class PostFetcher:
     """
 
     domain: str  # Group or person address in VK, e.g. "a_a_burlakov"
-
     _total_posts: int = 0
 
     def _set_total_posts_in_domain(self) -> None:
@@ -65,7 +64,12 @@ class PostFetcher:
         current_offset = 0
         while len(fetched_posts) < self._total_posts:
             vks_code = GET_POSTS_TEMPLATE.substitute(
-                {"domain": self.domain, "offset": current_offset, "count": 100}
+                {
+                    "domain": self.domain,
+                    "offset": current_offset,
+                    "count": 100,
+                    "iterations": 10,
+                }
             )
 
             params = {"v": VKAPI_VERSION, "access_token": VKAPI_TOKEN, "code": vks_code}
@@ -90,7 +94,7 @@ class PostFetcher:
                 break
 
             fetched_posts.extend(response["response"]["items"])
-            current_offset += 2500
+            current_offset += 1000
             logger.info(f'Fetched {len(fetched_posts)}/{self._total_posts} posts"...')
 
         logger.info(f'End fetching posts from "vk.com/{self.domain}"...')
