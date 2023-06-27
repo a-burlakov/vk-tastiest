@@ -28,11 +28,19 @@ class PostFetcher:
             "domain": self.domain,
         }
 
-        response = requests.get(VKAPI_URL + "wall.get", params=params).json()
-        if "error" in response:
-            raise _fastapi.HTTPException(
-                status_code=500, detail=response["error"]["error_msg"]
-            )
+        while True:
+            response = requests.get(VKAPI_URL + "wall.get", params=params).json()
+            if "error" in response:
+                error = response["error"]
+
+                # If too many requests per second, we'll just wait a bit.
+                if error["error_code"] == 6:
+                    logger.error(f'{error["error_msg"]}')
+                    continue
+
+                raise _fastapi.HTTPException(status_code=500, detail=error["error_msg"])
+
+            break
 
         self._total_posts = response["response"]["count"]
         logger.info(f"Total posts in VK domain: {self._total_posts}")
@@ -52,14 +60,22 @@ class PostFetcher:
             vks_code = GET_2500_POSTS_TEMPLATE.substitute(
                 {"domain": self.domain, "offset": current_offset}
             )
+
             params = {"v": VKAPI_VERSION, "access_token": VKAPI_TOKEN, "code": vks_code}
-            response = requests.get(VKAPI_URL + "execute", params=params).json()
+            response = requests.get(
+                VKAPI_URL + "execute",
+                params=params,
+                timeout=60,
+            ).json()
 
             if "error" in response:
                 raise _fastapi.HTTPException(
                     status_code=500, detail=response["error"]["error_msg"]
                 )
+
             fetched_posts.extend(response["response"]["items"])
             current_offset += 2500
+            logger.info(f'Fetched {len(fetched_posts)}/{self._total_posts} posts"...')
 
+        logger.info(f'End fetching posts from "vk.com/{self.domain}"...')
         return fetched_posts
