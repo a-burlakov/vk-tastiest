@@ -6,7 +6,7 @@ for URL /execute in VK API.
 
 from string import Template
 
-# Gets posts from VK domain using cycle with 25 iterations.
+# Gets posts from VK domain using cycle with.
 # 25 is maximum iterations API allows.
 GET_POSTS_TEMPLATE = Template(
     """
@@ -16,7 +16,7 @@ GET_POSTS_TEMPLATE = Template(
     var count = 0;
 
     var i = 0; 
-    while (i != 25) { 
+    while (i != $iterations) { 
         var data = API.wall.get({
             "count": $count,
             "offset": offset_global + offset_cycle, 
