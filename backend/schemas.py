@@ -13,6 +13,7 @@ class PostVideos(pydantic.BaseModel):
 class Post(pydantic.BaseModel):
     date: datetime.datetime
     likes: int
+    text: str
     path: str
     photos: list[PostPhotos]
     videos: list[PostVideos]

@@ -1,5 +1,5 @@
 """
-Class for post fetching from VK domains.
+Services for post fetching from VK domains.
 """
 
 import time
@@ -30,7 +30,7 @@ class PostFetcher:
     _total_posts_in_domain: int = 0
 
     # Number of times to execute query via "/execute" method.
-    _execution_times: int = 10
+    _execution_times: int = 5
     # Amount of post to fetch via one "/execute" method execution.
     _posts_per_portion: int = 100
 
@@ -62,63 +62,12 @@ class PostFetcher:
                     time.sleep(0.1)
                     continue
 
+                logger.error(f'{error["error_msg"]}')
                 raise _fastapi.HTTPException(status_code=500, detail=error["error_msg"])
             break
 
         self._total_posts_in_domain = response["response"]["count"]
         logger.info(f"Total posts in VK domain: {self._total_posts_in_domain}")
-
-    @staticmethod
-    def posts_as_schemas(posts_from_vk: list[dict]) -> list[Post]:
-        """
-        Creates posts as Pydantic schemas based on posts data given
-        from VK API.
-        :param posts_from_vk: list of posts as dicts from VK API
-        :return: list of posts as Pydantic objects
-        """
-        posts = []
-
-        for post_from_vk in posts_from_vk:
-            try:
-                post = Post(
-                    date=post_from_vk["date"],
-                    likes=post_from_vk["likes"]["count"],
-                    path=f"wall{post_from_vk['owner_id']}_" f"{post_from_vk['id']}",
-                    photos=[],
-                    videos=[],
-                )
-            except KeyError as e:
-                logger.error(f"No key {e} for post: {post_from_vk}")
-
-            # Collect attachments (photos, videos etc.).
-            if "attachments" in post_from_vk:
-                attachments = post_from_vk["attachments"]
-                for attachment in attachments:
-                    if attachment["type"] == "photo":
-                        try:
-                            photo = PostPhotos(url="")
-                            photo.url = attachment["photo"]["sizes"][-1]["url"]
-                            post.photos.append(photo)
-                        except KeyError as e:
-                            logger.error(f"No key {e} for photo: {post}")
-
-                    elif attachment["type"] == "video":
-                        video = PostVideos(first_frame_url="")
-                        video_from_vk = attachment["video"]
-                        if "first_frame" in video_from_vk:
-                            video.first_frame_url = video_from_vk["first_frame"][-1][
-                                "url"
-                            ]
-                        elif "image" in video_from_vk:
-                            video.first_frame_url = video_from_vk["image"][-1]["url"]
-                        else:
-                            logger.error(f"No video image found: {post}")
-                            continue
-                        post.videos.append(video)
-
-            posts.append(post)
-
-        return posts
 
     async def fetch_posts(self) -> None:
         """
@@ -160,6 +109,7 @@ class PostFetcher:
                                 await asyncio.sleep(delay=0.1)
                                 continue
 
+                            logger.error(f'{error["error_msg"]}')
                             raise _fastapi.HTTPException(
                                 status_code=500, detail=resp_json["error"]["error_msg"]
                             )
@@ -170,7 +120,7 @@ class PostFetcher:
                         )
 
                         posts_from_vk = resp_json["response"]["items"]
-                        posts = self.posts_as_schemas(posts_from_vk)
+                        posts = posts_as_schemas(posts_from_vk)
                         posts_from_vk = None
                         return posts
 
@@ -196,3 +146,54 @@ class PostFetcher:
 
         if self.sort_by_likes:
             self.posts = list(sorted(self.posts, key=lambda p: p.likes, reverse=True))
+
+
+def posts_as_schemas(posts_from_vk: list[dict]) -> list[Post]:
+    """
+    Creates posts as Pydantic schemas based on posts data given
+    from VK API.
+    :param posts_from_vk: list of posts as dicts from VK API
+    :return: list of posts as Pydantic objects
+    """
+    posts = []
+
+    for post_from_vk in posts_from_vk:
+        try:
+            post = Post(
+                date=post_from_vk["date"],
+                likes=post_from_vk["likes"]["count"],
+                text=post_from_vk["text"],
+                path=f"wall{post_from_vk['owner_id']}_" f"{post_from_vk['id']}",
+                photos=[],
+                videos=[],
+            )
+        except KeyError as e:
+            logger.error(f"No key {e} for post: {post_from_vk}")
+
+        # Collect attachments (photos, videos etc.).
+        if "attachments" in post_from_vk:
+            attachments = post_from_vk["attachments"]
+            for attachment in attachments:
+                if attachment["type"] == "photo":
+                    try:
+                        photo = PostPhotos(url="")
+                        photo.url = attachment["photo"]["sizes"][-1]["url"]
+                        post.photos.append(photo)
+                    except KeyError as e:
+                        logger.error(f"No key {e} for photo: {post}")
+
+                elif attachment["type"] == "video":
+                    video = PostVideos(first_frame_url="")
+                    video_from_vk = attachment["video"]
+                    if "first_frame" in video_from_vk:
+                        video.first_frame_url = video_from_vk["first_frame"][-1]["url"]
+                    elif "image" in video_from_vk:
+                        video.first_frame_url = video_from_vk["image"][-1]["url"]
+                    else:
+                        logger.error(f"No video image found: {post}")
+                        continue
+                    post.videos.append(video)
+
+        posts.append(post)
+
+    return posts

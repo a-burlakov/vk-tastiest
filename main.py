@@ -9,7 +9,7 @@ from backend.vkscript import GET_POSTS_TEMPLATE
 
 
 async def fetch_posts():
-    post_fetcher = PostFetcher("mudakoff", sort_by_likes=True)
+    post_fetcher = PostFetcher("a_a_burlakov", sort_by_likes=True)
 
     start = time.perf_counter()
     await post_fetcher.fetch_posts()
@@ -17,7 +17,7 @@ async def fetch_posts():
     print(duration)
 
     for post in post_fetcher.posts[:10]:
-        print(post.likes, "https://vk.com/" + post.path)
+        print(post.likes, "https://vk.com/" + post.path, post.text[:100])
 
 
 if __name__ == "__main__":
