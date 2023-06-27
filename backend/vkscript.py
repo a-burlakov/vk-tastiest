@@ -16,9 +16,9 @@ GET_POSTS_TEMPLATE = Template(
     var count = 0;
 
     var i = 0; 
-    while (i != $iterations) { 
+    while (i != $execution_times) { 
         var data = API.wall.get({
-            "count": $count,
+            "count": $posts_per_portion,
             "offset": offset_global + offset_cycle, 
             "domain": "$domain"
         }); 

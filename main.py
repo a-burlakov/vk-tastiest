@@ -14,14 +14,14 @@ async def fetch_posts():
     post_fetcher = PostFetcher(domain)
 
     start = time.perf_counter()
-    posts = await post_fetcher.fetch_posts_asynchronously()
+    posts = await post_fetcher.fetch_posts()
     duration = time.perf_counter() - start
     print(duration)
 
-    start = time.perf_counter()
-    posts = post_fetcher.fetch_posts_synchronously()
-    duration = time.perf_counter() - start
-    print(duration)
+    # start = time.perf_counter()
+    # posts = post_fetcher.fetch_posts_synchronously()
+    # duration = time.perf_counter() - start
+    # print(duration)
 
     # pprint(len(posts))
 
