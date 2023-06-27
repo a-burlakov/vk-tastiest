@@ -9,14 +9,15 @@ from backend.vkscript import GET_POSTS_TEMPLATE
 
 
 async def fetch_posts():
-    post_fetcher = PostFetcher("repouiii")
+    post_fetcher = PostFetcher("mudakoff", sort_by_likes=True)
 
     start = time.perf_counter()
     await post_fetcher.fetch_posts()
     duration = time.perf_counter() - start
     print(duration)
 
-    pprint(post_fetcher.posts[1])
+    for post in post_fetcher.posts[:10]:
+        print(post.likes, "https://vk.com/" + post.path)
 
 
 if __name__ == "__main__":

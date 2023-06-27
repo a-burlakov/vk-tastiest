@@ -22,8 +22,8 @@ class PostFetcher:
     """
 
     vk_domain: str  # Group or person address in VK, e.g. "a_a_burlakov".
-    post_amount: int = 0  # If 0, will gather all posts.
-    posts: list = field(default_factory=list[Post])
+    amount_to_fetch: int = 0  # If 0, will gather all posts.
+    posts: list[Post] = field(default_factory=list)
     sort_by_likes: bool = False
 
     _url_wall_get = VKAPI_URL + "wall.get"
@@ -104,7 +104,7 @@ class PostFetcher:
                             error = resp_json["error"]
 
                             if error["error_code"] == 6:
-                                logger.info(f'{error["error_msg"]}')
+                                logger.debug(f'{error["error_msg"]}')
                                 await asyncio.sleep(delay=0.1)
                                 continue
 
@@ -132,14 +132,16 @@ class PostFetcher:
             posts = []
 
             for post_from_vk in posts_from_vk:
-                post = Post(
-                    date=post_from_vk["date"],
-                    likes=post_from_vk["likes"]["count"],
-                    post_path=f"https://vk.com/wall{post_from_vk['owner_id']}_"
-                    f"{post_from_vk['id']}",
-                    photos=[],
-                    videos=[],
-                )
+                try:
+                    post = Post(
+                        date=post_from_vk["date"],
+                        likes=post_from_vk["likes"]["count"],
+                        path=f"wall{post_from_vk['owner_id']}_" f"{post_from_vk['id']}",
+                        photos=[],
+                        videos=[],
+                    )
+                except KeyError as e:
+                    logger.error(f"No key {e} for post: {post_from_vk}")
 
                 # Collect attachments (photos, videos etc.).
                 if "attachments" in post_from_vk:
@@ -178,12 +180,13 @@ class PostFetcher:
         if not self._total_posts_in_domain:
             return
 
-        # if self.post_amount:
-        #     amount_to_fetch = self._total_posts_in_domain
+        amount_to_fetch = self._total_posts_in_domain
+        if self.amount_to_fetch:
+            amount_to_fetch = self.amount_to_fetch
 
         tasks = []
         posts_per_task = self._posts_per_portion * self._execution_times
-        offsets = list(range(0, self._total_posts_in_domain, posts_per_task))
+        offsets = list(range(0, amount_to_fetch, posts_per_task))
         for offset in offsets:
             tasks.append(asyncio.create_task(fetch_posts_for_offset(offset)))
 
@@ -191,3 +194,6 @@ class PostFetcher:
 
         # Flatting results into one list.
         self.posts = [post for result in results for post in result]
+
+        if self.sort_by_likes:
+            self.posts = list(sorted(self.posts, key=lambda p: p.likes, reverse=True))
