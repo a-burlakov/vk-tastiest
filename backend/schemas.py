@@ -1,5 +1,18 @@
-import pydantic as _pydantic
+import datetime
+import pydantic as pydantic
 
 
-class Post(_pydantic.BaseModel):
-    ...
+class PostPhotos(pydantic.BaseModel):
+    url: str
+
+
+class PostVideos(pydantic.BaseModel):
+    first_frame_url: str
+
+
+class Post(pydantic.BaseModel):
+    date: datetime.datetime
+    likes: int
+    post_path: str
+    photos: list[PostPhotos]
+    videos: list[PostVideos]

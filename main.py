@@ -9,21 +9,14 @@ from backend.vkscript import GET_POSTS_TEMPLATE
 
 
 async def fetch_posts():
-    domain = "te_ekb"
-    # domain = "repouiii"
-    post_fetcher = PostFetcher(domain)
+    post_fetcher = PostFetcher("repouiii")
 
     start = time.perf_counter()
-    posts = await post_fetcher.fetch_posts()
+    await post_fetcher.fetch_posts()
     duration = time.perf_counter() - start
     print(duration)
 
-    # start = time.perf_counter()
-    # posts = post_fetcher.fetch_posts_synchronously()
-    # duration = time.perf_counter() - start
-    # print(duration)
-
-    # pprint(len(posts))
+    pprint(post_fetcher.posts[1])
 
 
 if __name__ == "__main__":

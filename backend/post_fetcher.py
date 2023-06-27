@@ -1,5 +1,9 @@
+"""
+Class for post fetching from VK domains.
+"""
+
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import asyncio
 import requests
 import fastapi as _fastapi
@@ -7,6 +11,7 @@ from aiohttp import ClientSession
 
 from backend.logger import logger
 from backend.constants import VKAPI_TOKEN, VKAPI_VERSION, VKAPI_URL
+from backend.schemas import Post, PostPhotos, PostVideos
 from backend.vkscript import GET_POSTS_TEMPLATE
 
 
@@ -16,7 +21,10 @@ class PostFetcher:
     Fetches posts from VK group or person.
     """
 
-    vk_domain: str  # Group or person address in VK, e.g. "a_a_burlakov"
+    vk_domain: str  # Group or person address in VK, e.g. "a_a_burlakov".
+    post_amount: int = 0  # If 0, will gather all posts.
+    posts: list = field(default_factory=list[Post])
+    sort_by_likes: bool = False
 
     _url_wall_get = VKAPI_URL + "wall.get"
     _total_posts_in_domain: int = 0
@@ -60,10 +68,10 @@ class PostFetcher:
         self._total_posts_in_domain = response["response"]["count"]
         logger.info(f"Total posts in VK domain: {self._total_posts_in_domain}")
 
-    async def fetch_posts(self) -> list:
+    async def fetch_posts(self) -> None:
         """
-        Fetches posts from VK domain asynchronously.
-        :return: a list of posts in the VK domain.
+        Fetches posts from VK domain asynchronously and
+        put it into "posts" attribute.
         """
 
         async def fetch_posts_for_offset(offset) -> list:
@@ -96,7 +104,7 @@ class PostFetcher:
                             error = resp_json["error"]
 
                             if error["error_code"] == 6:
-                                logger.error(f'{error["error_msg"]}')
+                                logger.info(f'{error["error_msg"]}')
                                 await asyncio.sleep(delay=0.1)
                                 continue
 
@@ -105,16 +113,73 @@ class PostFetcher:
                             )
 
                         logger.info(
-                            f'(offset {offset}) End fetching posts from "vk.com/{self.vk_domain}"...'
+                            f"(offset {offset}) End fetching posts from "
+                            f'"vk.com/{self.vk_domain}"...'
                         )
 
-                        return resp_json["response"]["items"]
+                        posts_from_vk = resp_json["response"]["items"]
+                        posts = posts_as_schemas(posts_from_vk)
+                        posts_from_vk = None
+                        return posts
 
-        fetched_posts: list = []
+        def posts_as_schemas(posts_from_vk: list[dict]) -> list[Post]:
+            """
+            Creates posts as Pydantic schemas based on posts data given
+            from VK API.
+            :param posts_from_vk: list of posts as dicts from VK API
+            :return: list of posts as Pydantic objects
+            """
+            posts = []
+
+            for post_from_vk in posts_from_vk:
+                post = Post(
+                    date=post_from_vk["date"],
+                    likes=post_from_vk["likes"]["count"],
+                    post_path=f"https://vk.com/wall{post_from_vk['owner_id']}_"
+                    f"{post_from_vk['id']}",
+                    photos=[],
+                    videos=[],
+                )
+
+                # Collect attachments (photos, videos etc.).
+                if "attachments" in post_from_vk:
+                    attachments = post_from_vk["attachments"]
+                    for attachment in attachments:
+                        if attachment["type"] == "photo":
+                            try:
+                                photo = PostPhotos(url="")
+                                photo.url = attachment["photo"]["sizes"][-1]["url"]
+                                post.photos.append(photo)
+                            except KeyError as e:
+                                logger.error(f"No key {e} for photo: {post}")
+
+                        elif attachment["type"] == "video":
+                            video = PostVideos(first_frame_url="")
+                            video_from_vk = attachment["video"]
+                            if "first_frame" in video_from_vk:
+                                video.first_frame_url = video_from_vk["first_frame"][
+                                    -1
+                                ]["url"]
+                            elif "image" in video_from_vk:
+                                video.first_frame_url = video_from_vk["image"][-1][
+                                    "url"
+                                ]
+                            else:
+                                logger.error(f"No video image found: {post}")
+                                continue
+                            post.videos.append(video)
+
+                posts.append(post)
+
+            return posts
+
         self._set_total_posts_in_domain()
 
         if not self._total_posts_in_domain:
-            return fetched_posts
+            return
+
+        # if self.post_amount:
+        #     amount_to_fetch = self._total_posts_in_domain
 
         tasks = []
         posts_per_task = self._posts_per_portion * self._execution_times
@@ -125,5 +190,4 @@ class PostFetcher:
         results = await asyncio.gather(*tasks)
 
         # Flatting results into one list.
-        fetched_posts = [post for result in results for post in result]
-        return fetched_posts
+        self.posts = [post for result in results for post in result]
