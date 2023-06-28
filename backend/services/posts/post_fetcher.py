@@ -4,21 +4,17 @@ Services for post fetching from VK domains.
 
 import time
 from dataclasses import dataclass, field
+import logging
 import asyncio
 import requests
 import fastapi as _fastapi
 from aiohttp import ClientSession
 
-from backend.logger import logger
-from backend.constants import VKAPI_TOKEN, VKAPI_VERSION, VKAPI_URL
-from backend.schemas import Post, PostPhotos, PostVideos
-from backend.vkscript import GET_POSTS_TEMPLATE
+from backend.schemas.post import Post, PostPhotos, PostVideos
+from backend.services.vkontakte.vkscript import get_wall_post_template
 from backend.core.config import settings
 
-import logging
-
 logging.basicConfig(**settings.LOGGING_STANDARD_PARAMS)
-
 logger = logging.getLogger(__name__)
 
 
@@ -33,7 +29,7 @@ class PostFetcher:
     posts: list[Post] = field(default_factory=list)
     sort_by_likes: bool = False
 
-    _url_wall_get = VKAPI_URL + "wall.get"
+    _url_wall_get = settings.VKAPI_URL + "wall.get"
     _total_posts_in_domain: int = 0
 
     # Number of times to execute query via "/execute" method.
@@ -46,15 +42,16 @@ class PostFetcher:
         Not asynchronous as it quickly gets amount of posts to fetch,
         and the amount is used to create asynchronous tasks.
         """
-        logger.info(f'Getting total posts in "vk.com/{self.vk_domain}"...')
+        logger.info('Getting total posts in "vk.com/%s"...', self.vk_domain)
 
         params = {
-            "v": VKAPI_VERSION,
-            "access_token": VKAPI_TOKEN,
+            "v": settings.VKAPI_VERSION,
+            "access_token": settings.VKAPI_TOKEN,
             "count": 1,  # Enough just to get total post in domain.
             "domain": self.vk_domain,
         }
 
+        # Data fetching.
         while True:
             response = requests.get(
                 self._url_wall_get, params=params, timeout=60
@@ -63,18 +60,19 @@ class PostFetcher:
             if "error" in response:
                 error = response["error"]
 
-                # If too many requests per second, we'll just wait a bit.
+                # Too many requests per second.
                 if error["error_code"] == 6:
-                    logger.error(f'{error["error_msg"]}')
+                    logger.error(error["error_msg"])
                     time.sleep(0.1)
                     continue
 
-                logger.error(f'{error["error_msg"]}')
+                # Critical error.
+                logger.error(error["error_msg"])
                 raise _fastapi.HTTPException(status_code=500, detail=error["error_msg"])
             break
 
         self._total_posts_in_domain = response["response"]["count"]
-        logger.info(f"Total posts in VK domain: {self._total_posts_in_domain}")
+        logger.info("Total posts in VK domain: %s", self._total_posts_in_domain)
 
     async def fetch_posts(self) -> None:
         """
@@ -84,11 +82,14 @@ class PostFetcher:
 
         async def fetch_posts_for_offset(offset) -> list:
             logger.info(
-                f'(offset {offset}) Start fetching posts from "vk.com/{self.vk_domain}"...'
+                "(offset %i) Start fetching posts from vk.com/%s...",
+                offset,
+                self.vk_domain,
             )
 
             async with ClientSession() as session:
-                vks_code = GET_POSTS_TEMPLATE.substitute(
+                # VK Script code for /execute method.
+                vks_code = get_wall_post_template.substitute(
                     {
                         "domain": self.vk_domain,
                         "offset": offset,
@@ -97,42 +98,46 @@ class PostFetcher:
                     }
                 )
                 params = {
-                    "v": VKAPI_VERSION,
-                    "access_token": VKAPI_TOKEN,
+                    "v": settings.VKAPI_VERSION,
+                    "access_token": settings.VKAPI_TOKEN,
                     "code": vks_code,
                 }
-                url = VKAPI_URL + "execute"
+                url = settings.VKAPI_URL + "execute"
 
+                # Posts fetching.
                 while True:
                     async with session.get(url=url, params=params) as response:
                         resp_json = await response.json()
 
-                        # If too many requests per second, we'll just wait a bit.
                         if "error" in resp_json:
                             error = resp_json["error"]
 
+                            # Too many requests per second.
                             if error["error_code"] == 6:
-                                logger.debug(f'{error["error_msg"]}')
+                                logger.debug(error["error_msg"])
                                 await asyncio.sleep(delay=0.1)
                                 continue
 
-                            logger.error(f'{error["error_msg"]}')
+                            # Critical error.
+                            logger.error(error["error_msg"])
                             raise _fastapi.HTTPException(
                                 status_code=500, detail=resp_json["error"]["error_msg"]
                             )
 
                         logger.info(
-                            f"(offset {offset}) End fetching posts from "
-                            f'"vk.com/{self.vk_domain}"...'
+                            "(offset %i) End fetching posts from vk.com/%s...",
+                            offset,
+                            self.vk_domain,
                         )
 
+                        # Gathered posts handling.
                         posts_from_vk = resp_json["response"]["items"]
                         posts = posts_as_schemas(posts_from_vk)
-                        posts_from_vk = None
+                        del posts_from_vk
                         return posts
 
+        # Checks and preparations.
         self._set_total_posts_in_domain()
-
         if not self._total_posts_in_domain:
             return
 
@@ -140,17 +145,20 @@ class PostFetcher:
         if self.amount_to_fetch:
             amount_to_fetch = self.amount_to_fetch
 
+        # Creating tasks for fetching.
         tasks = []
         posts_per_task = self._posts_per_portion * self._execution_times
         offsets = list(range(0, amount_to_fetch, posts_per_task))
         for offset in offsets:
             tasks.append(asyncio.create_task(fetch_posts_for_offset(offset)))
 
+        # Running tasks.
         results = await asyncio.gather(*tasks)
 
-        # Flatting results into one list.
+        # Flatting results from many tasks into one list.
         self.posts = [post for result in results for post in result]
 
+        # Final actions.
         if self.sort_by_likes:
             self.posts = list(sorted(self.posts, key=lambda p: p.likes, reverse=True))
 
@@ -174,8 +182,9 @@ def posts_as_schemas(posts_from_vk: list[dict]) -> list[Post]:
                 photos=[],
                 videos=[],
             )
-        except KeyError as e:
-            logger.error(f"No key {e} for post: {post_from_vk}")
+        except KeyError as exc:
+            logger.error("No key %s for post: %s", exc, post_from_vk)
+            continue
 
         # Collect attachments (photos, videos etc.).
         if "attachments" in post_from_vk:
@@ -186,8 +195,8 @@ def posts_as_schemas(posts_from_vk: list[dict]) -> list[Post]:
                         photo = PostPhotos(url="")
                         photo.url = attachment["photo"]["sizes"][-1]["url"]
                         post.photos.append(photo)
-                    except KeyError as e:
-                        logger.error(f"No key {e} for photo: {post}")
+                    except KeyError as exc:
+                        logger.error("No key %s for photo: %s", exc, post_from_vk)
 
                 elif attachment["type"] == "video":
                     video = PostVideos(first_frame_url="")
@@ -197,7 +206,7 @@ def posts_as_schemas(posts_from_vk: list[dict]) -> list[Post]:
                     elif "image" in video_from_vk:
                         video.first_frame_url = video_from_vk["image"][-1]["url"]
                     else:
-                        logger.error(f"No video image found: {post}")
+                        logger.error("No video image found: %s", post)
                         continue
                     post.videos.append(video)
 

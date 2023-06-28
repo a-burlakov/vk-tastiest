@@ -8,7 +8,7 @@ from string import Template
 
 # Gets posts from VK domain using cycle with.
 # 25 is maximum iterations API allows.
-GET_POSTS_TEMPLATE = Template(
+get_wall_post_template = Template(
     """
     var offset_global = $offset;
     var offset_cycle = 0;
