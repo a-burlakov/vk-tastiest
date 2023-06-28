@@ -1,7 +1,6 @@
 """
 Services for post fetching from VK domains.
 """
-import sys
 import logging
 import asyncio
 from dataclasses import dataclass, field

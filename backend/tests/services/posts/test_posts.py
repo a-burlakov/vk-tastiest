@@ -1,38 +1,12 @@
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
+# Тест на _set_total_posts_in_domain - нужен будет мок на requests
+# Тест на fetch_posts - нужен мок на асинхронный реквест, мда
+# Тест на posts_as_schemas - просто все
+# тест на то, что адрес не существует
+# тест на то, что указано amount_to_fetch
+# тест, что указано sort by likes или нет
 
-from app.core.config import settings
-from app.tests.utils.item import create_random_item
+# Нужен мок, в общем, который будет возвращать шаблоны того, что может прийти из VK
+# надо будет покурить, как это делается, по шаблону.
 
-
-def test_create_item(
-    client: TestClient, superuser_token_headers: dict, db: Session
-) -> None:
-    data = {"title": "Foo", "description": "Fighters"}
-    response = client.post(
-        f"{settings.API_V1_STR}/items/",
-        headers=superuser_token_headers,
-        json=data,
-    )
-    assert response.status_code == 200
-    content = response.json()
-    assert content["title"] == data["title"]
-    assert content["description"] == data["description"]
-    assert "id" in content
-    assert "owner_id" in content
-
-
-def test_read_item(
-    client: TestClient, superuser_token_headers: dict, db: Session
-) -> None:
-    item = create_random_item(db)
-    response = client.get(
-        f"{settings.API_V1_STR}/items/{item.id}",
-        headers=superuser_token_headers,
-    )
-    assert response.status_code == 200
-    content = response.json()
-    assert content["title"] == item.title
-    assert content["description"] == item.description
-    assert content["id"] == item.id
-    assert content["owner_id"] == item.owner_id
+# Мок возвратит count, и возвратит под этот count всякие данные.
+# Но надо же еще протестировать, если у нас больше чем 500 постов, чтобы они разделились
