@@ -4,8 +4,8 @@ import time
 from dataclasses import dataclass
 
 import requests
+import aiohttp
 import fastapi as _fastapi
-from aiohttp import ClientSession
 
 from backend.core.config import settings
 
@@ -21,7 +21,7 @@ def vk_synchronous_request(url: str, params: dict, **kwargs):
 
         if "error" in resp_json:
             error = VKError(resp_json["error"], params=params | kwargs)
-            error.handle_error()
+            error.handle_error_sync()
             continue
 
         return resp_json
@@ -30,7 +30,10 @@ def vk_synchronous_request(url: str, params: dict, **kwargs):
 async def vk_asynchronous_request(url: str, params: dict, **kwargs):
     """Perform a custom asynchronous request to VK API."""
 
-    async with ClientSession() as session:
+    connector = aiohttp.TCPConnector(limit=60)
+    session = aiohttp.ClientSession()
+
+    async with session:
         while True:
             async with session.get(url=url, params=params) as response:
                 resp_json = await response.json()
@@ -38,13 +41,12 @@ async def vk_asynchronous_request(url: str, params: dict, **kwargs):
                 if "error" in resp_json:
                     error = VKError(
                         resp_json["error"],
-                        is_async=True,
                         params=params | kwargs,
                     )
-                    await error.handle_error()
+                    await error.handle_error_async()
                     continue
-
-                return resp_json
+            break
+    return resp_json
 
 
 @dataclass
@@ -55,19 +57,32 @@ class VKError:
     error: dict
     # Custom request parameters that were in context at the request time.
     params: dict
-    is_async: bool = False
 
-    async def handle_error(self) -> None:
+    async def handle_error_async(self) -> None:
         """Check if the error is critical and raises an exception if it is."""
 
         # Too many requests per second.
         if self.error["error_code"] == 6:
             logger.debug(self.error["error_msg"])
-            if self.is_async:
-                await asyncio.sleep(0)
-            else:
-                time.sleep(0.1)
+            await asyncio.sleep(0)
+
             return
+
+        self.handle_critical_error()
+
+    def handle_error_sync(self) -> None:
+        """Check if the error is critical and raises an exception if it is."""
+
+        # Too many requests per second.
+        if self.error["error_code"] == 6:
+            logger.debug(self.error["error_msg"])
+            time.sleep(0.1)
+            return
+
+        self.handle_critical_error()
+
+    def handle_critical_error(self):
+        """If the error is critical, raises an corresponding exception."""
 
         # Specific critical errors.
         if self.error["error_code"] == 100:
@@ -82,6 +97,6 @@ class VKError:
                 )
             raise _fastapi.HTTPException(status_code=404, detail=detail)
 
-        # Some other unexpected critical errors.
+        # Unexpected critical errors.
         logger.error(self.error["error_msg"])
         raise _fastapi.HTTPException(status_code=500, detail=self.error["error_msg"])
