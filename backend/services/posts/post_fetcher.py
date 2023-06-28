@@ -66,7 +66,15 @@ class PostFetcher:
                     time.sleep(0.1)
                     continue
 
-                # Critical error.
+                # Critical errors.
+                if error["error_code"] == 100:
+                    logger.info(error["error_msg"], params)
+                    detail = error["error_msg"]
+                    if "owner_id is undefined" in error["error_msg"]:
+                        detail = "Человек/сообщество с таким адресом не найдены."
+                    raise _fastapi.HTTPException(status_code=404, detail=detail)
+
+                # Some other unexpected critical errors.
                 logger.error(error["error_msg"])
                 raise _fastapi.HTTPException(status_code=500, detail=error["error_msg"])
             break
@@ -114,14 +122,26 @@ class PostFetcher:
 
                             # Too many requests per second.
                             if error["error_code"] == 6:
-                                logger.debug(error["error_msg"])
-                                await asyncio.sleep(delay=0.1)
+                                logger.error(error["error_msg"])
+                                time.sleep(0.1)
                                 continue
 
-                            # Critical error.
+                            # Critical errors.
+                            if error["error_code"] == 100:
+                                logger.info(error["error_msg"], params)
+                                detail = error["error_msg"]
+                                if "owner_id is undefined" in error["error_msg"]:
+                                    detail = (
+                                        "Человек/сообщество с таким адресом не найдены."
+                                    )
+                                raise _fastapi.HTTPException(
+                                    status_code=404, detail=detail
+                                )
+
+                            # Some other unexpected critical errors.
                             logger.error(error["error_msg"])
                             raise _fastapi.HTTPException(
-                                status_code=500, detail=resp_json["error"]["error_msg"]
+                                status_code=500, detail=error["error_msg"]
                             )
 
                         logger.info(
