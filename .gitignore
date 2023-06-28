@@ -1,3 +1,2 @@
 .idea
-
-backend/core/.env
+.env
