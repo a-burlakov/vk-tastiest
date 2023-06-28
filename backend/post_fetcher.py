@@ -13,6 +13,13 @@ from backend.logger import logger
 from backend.constants import VKAPI_TOKEN, VKAPI_VERSION, VKAPI_URL
 from backend.schemas import Post, PostPhotos, PostVideos
 from backend.vkscript import GET_POSTS_TEMPLATE
+from backend.core.config import settings
+
+import logging
+
+logging.basicConfig(**settings.LOGGING_STANDARD_PARAMS)
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass

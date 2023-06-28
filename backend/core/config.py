@@ -1,8 +1,5 @@
-VKAPI_URL = "https://api.vk.com/method/"
-VKAPI_VERSION = "5.131"
-VKAPI_TOKEN = "ed52a625ed52a625ed52a6252eee461ffbeed52ed52a62589c8f057c4ad4cf28e7d8a73"
-
 import secrets
+import logging
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import AnyHttpUrl, BaseSettings, EmailStr, HttpUrl, PostgresDsn, validator
@@ -85,6 +82,18 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER: EmailStr
     FIRST_SUPERUSER_PASSWORD: str
     USERS_OPEN_REGISTRATION: bool = False
+
+    VKAPI_URL = "https://api.vk.com/method/"
+    VKAPI_VERSION = "5.131"
+    VKAPI_TOKEN = (
+        "ed52a625ed52a625ed52a6252eee461ffbeed52ed52a62589c8f057c4ad4cf28e7d8a73"
+    )
+
+    LOGGING_STANDARD_PARAMS = {
+        "level": logging.INFO,
+        "format": "[\033[92m%(levelname)s %(asctime)s\033[0m]: %(message)s",
+        "datefmt": "%m/%d/%Y %I:%M:%S %p",
+    }
 
     class Config:
         case_sensitive = True
