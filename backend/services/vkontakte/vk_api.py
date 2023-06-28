@@ -42,10 +42,16 @@ async def vk_asynchronous_request(url: str, params: dict, **kwargs):
 
 @dataclass
 class VKError:
+    """Class for managing errors came from VK API."""
+
+    # Error representation as it is from VK API as dict.
     error: dict
+    # Custom request parameters that were in context at the request time.
     params: dict
 
     def handle_error(self) -> None:
+        """Check if the error is critical and raises an exception if it is."""
+
         # Too many requests per second.
         if self.error["error_code"] == 6:
             logger.debug(self.error["error_msg"])
