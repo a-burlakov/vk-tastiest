@@ -17,10 +17,6 @@ from backend.core.config import settings
 logging.basicConfig(**settings.LOGGING_STANDARD_PARAMS)
 logger = logging.getLogger(__name__)
 
-# if sys.platform == "win32":
-#     loop = asyncio.ProactorEventLoop()
-#     asyncio.set_event_loop(loop)
-
 
 @dataclass
 class PostFetcher:
