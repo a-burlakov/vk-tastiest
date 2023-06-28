@@ -17,9 +17,9 @@ from backend.core.config import settings
 logging.basicConfig(**settings.LOGGING_STANDARD_PARAMS)
 logger = logging.getLogger(__name__)
 
-if sys.platform == "win32":
-    loop = asyncio.ProactorEventLoop()
-    asyncio.set_event_loop(loop)
+# if sys.platform == "win32":
+#     loop = asyncio.ProactorEventLoop()
+#     asyncio.set_event_loop(loop)
 
 
 @dataclass
@@ -79,15 +79,6 @@ class PostFetcher:
         Fetches posts from VK domain asynchronously and
         put it into "posts" attribute.
         """
-
-        async def gather_with_concurrency(n, *coros):
-            semaphore = asyncio.Semaphore(n)
-
-            async def sem_coro(coro):
-                async with semaphore:
-                    return await coro
-
-            return await asyncio.gather(*(sem_coro(c) for c in coros))
 
         async def fetch_posts_for_offset(offset) -> list:
             logger.info(
@@ -150,7 +141,7 @@ class PostFetcher:
 
         # Running tasks.
         logger.info("Start fetching posts from vk.com/%s...", self.vk_domain)
-        results = await gather_with_concurrency(60, *tasks)
+        results = await asyncio.gather(*tasks)
         logger.info("End fetching posts from vk.com/%s...", self.vk_domain)
 
         # Flatting results from many tasks into one list.

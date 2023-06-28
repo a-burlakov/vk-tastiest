@@ -11,6 +11,7 @@ from backend.core.config import settings
 
 logging.basicConfig(**settings.LOGGING_STANDARD_PARAMS)
 logger = logging.getLogger(__name__)
+sem = asyncio.Semaphore(10)
 
 
 def vk_synchronous_request(url: str, params: dict, **kwargs):
@@ -30,13 +31,11 @@ def vk_synchronous_request(url: str, params: dict, **kwargs):
 async def vk_asynchronous_request(url: str, params: dict, **kwargs):
     """Perform a custom asynchronous request to VK API."""
 
-    connector = aiohttp.TCPConnector(limit=60)
-    session = aiohttp.ClientSession()
-
-    async with session:
-        while True:
-            async with session.get(url=url, params=params) as response:
-                resp_json = await response.json()
+    async with sem:
+        async with aiohttp.ClientSession() as session:
+            while True:
+                async with session.get(url=url, params=params) as response:
+                    resp_json = await response.json()
 
                 if "error" in resp_json:
                     error = VKError(
@@ -45,7 +44,9 @@ async def vk_asynchronous_request(url: str, params: dict, **kwargs):
                     )
                     await error.handle_error_async()
                     continue
-            break
+
+                break
+
     return resp_json
 
 
