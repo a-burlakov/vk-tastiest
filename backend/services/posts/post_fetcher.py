@@ -26,9 +26,9 @@ class PostFetcher:
 
     vk_domain: str  # Group or person address in VK, e.g. "a_a_burlakov".
     amount_to_fetch: int = 0  # If 0, will gather all posts.
-    posts: list[Post] = field(default_factory=list)
     sort_by_likes: bool = False
 
+    _posts: list[Post] = field(default_factory=list)
     _url_wall_get = settings.VKAPI_URL + "wall.get"
     _total_posts_in_domain: int = 0
 
@@ -36,6 +36,15 @@ class PostFetcher:
     _execution_times: int = 5
     # Amount of post to fetch via one "/execute" method execution.
     _posts_per_portion: int = 100
+
+    def __post_init__(self):
+        # Compressing domain.
+        if "/" in self.vk_domain:
+            self.vk_domain = self.vk_domain.split("/")[-1]
+
+    @property
+    def posts(self) -> list[Post]:
+        return self._posts
 
     def _set_total_posts_in_domain(self) -> None:
         """Sets "_total_posts" as amount of posts in the VK domain.
@@ -71,7 +80,9 @@ class PostFetcher:
                     logger.info(error["error_msg"], params)
                     detail = error["error_msg"]
                     if "owner_id is undefined" in error["error_msg"]:
-                        detail = "Человек/сообщество с таким адресом не найдены."
+                        detail = (
+                            f"Человек/сообщество с адресом {self.vk_domain} не найдены."
+                        )
                     raise _fastapi.HTTPException(status_code=404, detail=detail)
 
                 # Some other unexpected critical errors.
@@ -131,9 +142,7 @@ class PostFetcher:
                                 logger.info(error["error_msg"], params)
                                 detail = error["error_msg"]
                                 if "owner_id is undefined" in error["error_msg"]:
-                                    detail = (
-                                        "Человек/сообщество с таким адресом не найдены."
-                                    )
+                                    detail = f"Человек/сообщество с адресом {self.vk_domain} не найдены."
                                 raise _fastapi.HTTPException(
                                     status_code=404, detail=detail
                                 )
@@ -176,11 +185,11 @@ class PostFetcher:
         results = await asyncio.gather(*tasks)
 
         # Flatting results from many tasks into one list.
-        self.posts = [post for result in results for post in result]
+        self._posts = [post for result in results for post in result]
 
         # Final actions.
         if self.sort_by_likes:
-            self.posts = list(sorted(self.posts, key=lambda p: p.likes, reverse=True))
+            self._posts = list(sorted(self.posts, key=lambda p: p.likes, reverse=True))
 
 
 def posts_as_schemas(posts_from_vk: list[dict]) -> list[Post]:
