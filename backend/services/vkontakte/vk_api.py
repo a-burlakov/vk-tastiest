@@ -22,6 +22,7 @@ def vk_synchronous_request(url: str, params: dict, **kwargs):
         if "error" in resp_json:
             error = VKError(resp_json["error"], params=params | kwargs)
             error.handle_error()
+            continue
 
         return resp_json
 
@@ -63,7 +64,7 @@ class VKError:
         if self.error["error_code"] == 6:
             logger.debug(self.error["error_msg"])
             if self.is_async:
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0)
             else:
                 time.sleep(0.1)
             return
