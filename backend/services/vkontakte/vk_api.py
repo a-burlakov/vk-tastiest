@@ -11,7 +11,8 @@ from backend.core.config import settings
 
 logging.basicConfig(**settings.LOGGING_STANDARD_PARAMS)
 logger = logging.getLogger(__name__)
-sem = asyncio.Semaphore(60)
+
+sem = asyncio.Semaphore(100)
 
 
 def vk_synchronous_request(url: str, params: dict, **kwargs):
