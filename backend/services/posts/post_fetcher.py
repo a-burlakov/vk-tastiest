@@ -2,16 +2,16 @@
 Services for post fetching from VK domains.
 """
 
-import time
 from dataclasses import dataclass, field
 import logging
 import asyncio
-import requests
-import fastapi as _fastapi
-from aiohttp import ClientSession
 
 from backend.schemas.post import Post, PostPhotos, PostVideos
-from backend.services.vkontakte.vkscript import get_wall_post_template
+from backend.services.vkontakte.vk_api import (
+    vk_synchronous_request,
+    vk_asynchronous_request,
+)
+from backend.services.vkontakte.vk_script import get_wall_post_template
 from backend.core.config import settings
 
 logging.basicConfig(**settings.LOGGING_STANDARD_PARAMS)
@@ -61,34 +61,11 @@ class PostFetcher:
         }
 
         # Data fetching.
-        while True:
-            response = requests.get(
-                self._url_wall_get, params=params, timeout=60
-            ).json()
-
-            if "error" in response:
-                error = response["error"]
-
-                # Too many requests per second.
-                if error["error_code"] == 6:
-                    logger.error(error["error_msg"])
-                    time.sleep(0.1)
-                    continue
-
-                # Critical errors.
-                if error["error_code"] == 100:
-                    logger.info(error["error_msg"], params)
-                    detail = error["error_msg"]
-                    if "owner_id is undefined" in error["error_msg"]:
-                        detail = (
-                            f"Человек/сообщество с адресом {self.vk_domain} не найдены."
-                        )
-                    raise _fastapi.HTTPException(status_code=404, detail=detail)
-
-                # Some other unexpected critical errors.
-                logger.error(error["error_msg"])
-                raise _fastapi.HTTPException(status_code=500, detail=error["error_msg"])
-            break
+        response = vk_synchronous_request(
+            self._url_wall_get,
+            params,
+            domain=self.vk_domain,
+        )
 
         self._total_posts_in_domain = response["response"]["count"]
         logger.info("Total posts in VK domain: %s", self._total_posts_in_domain)
@@ -106,83 +83,62 @@ class PostFetcher:
                 self.vk_domain,
             )
 
-            async with ClientSession() as session:
-                # VK Script code for /execute method.
-                vks_code = get_wall_post_template.substitute(
-                    {
-                        "domain": self.vk_domain,
-                        "offset": offset,
-                        "posts_per_portion": self._posts_per_portion,
-                        "execution_times": self._execution_times,
-                    }
-                )
-                params = {
-                    "v": settings.VKAPI_VERSION,
-                    "access_token": settings.VKAPI_TOKEN,
-                    "code": vks_code,
+            # VK Script code for /execute method.
+            vks_code = get_wall_post_template.substitute(
+                {
+                    "domain": self.vk_domain,
+                    "offset": offset,
+                    "posts_per_portion": self._posts_per_portion,
+                    "execution_times": self._execution_times,
                 }
-                url = settings.VKAPI_URL + "execute"
+            )
+            params = {
+                "v": settings.VKAPI_VERSION,
+                "access_token": settings.VKAPI_TOKEN,
+                "code": vks_code,
+            }
+            url = settings.VKAPI_URL + "execute"
 
-                # Posts fetching.
-                while True:
-                    async with session.get(url=url, params=params) as response:
-                        resp_json = await response.json()
+            # Posts fetching.
+            resp_json = await vk_asynchronous_request(
+                url,
+                params,
+                domain=self.vk_domain,
+                offset=offset,
+            )
 
-                        if "error" in resp_json:
-                            error = resp_json["error"]
+            logger.info(
+                "(offset %i) End fetching posts from vk.com/%s...",
+                offset,
+                self.vk_domain,
+            )
 
-                            # Too many requests per second.
-                            if error["error_code"] == 6:
-                                logger.error(error["error_msg"])
-                                time.sleep(0.1)
-                                continue
-
-                            # Critical errors.
-                            if error["error_code"] == 100:
-                                logger.info(error["error_msg"], params)
-                                detail = error["error_msg"]
-                                if "owner_id is undefined" in error["error_msg"]:
-                                    detail = f"Человек/сообщество с адресом {self.vk_domain} не найдены."
-                                raise _fastapi.HTTPException(
-                                    status_code=404, detail=detail
-                                )
-
-                            # Some other unexpected critical errors.
-                            logger.error(error["error_msg"])
-                            raise _fastapi.HTTPException(
-                                status_code=500, detail=error["error_msg"]
-                            )
-
-                        logger.info(
-                            "(offset %i) End fetching posts from vk.com/%s...",
-                            offset,
-                            self.vk_domain,
-                        )
-
-                        # Gathered posts handling.
-                        posts_from_vk = resp_json["response"]["items"]
-                        posts = posts_as_schemas(posts_from_vk)
-                        del posts_from_vk
-                        return posts
+            # Gathered posts handling.
+            posts_from_vk = resp_json["response"]["items"]
+            posts = posts_as_schemas(posts_from_vk)
+            del posts_from_vk
+            return posts
 
         # Checks and preparations.
         self._set_total_posts_in_domain()
         if not self._total_posts_in_domain:
             return
 
-        amount_to_fetch = self._total_posts_in_domain
-        if self.amount_to_fetch:
-            amount_to_fetch = self.amount_to_fetch
+        # amount_to_fetch = self._total_posts_in_domain
+        # if self.amount_to_fetch:
+        #     amount_to_fetch = self.amount_to_fetch
 
         # Creating tasks for fetching.
         tasks = []
         posts_per_task = self._posts_per_portion * self._execution_times
-        offsets = list(range(0, amount_to_fetch, posts_per_task))
+        offsets = list(range(0, self._total_posts_in_domain, posts_per_task))
         for offset in offsets:
             tasks.append(asyncio.create_task(fetch_posts_for_offset(offset)))
 
         # Running tasks.
+        logger.info("Start fetching posts from vk.com/%s...", self.vk_domain)
         results = await asyncio.gather(*tasks)
+        logger.info("End fetching posts from vk.com/%s...", self.vk_domain)
 
         # Flatting results from many tasks into one list.
         self._posts = [post for result in results for post in result]
@@ -190,6 +146,8 @@ class PostFetcher:
         # Final actions.
         if self.sort_by_likes:
             self._posts = list(sorted(self.posts, key=lambda p: p.likes, reverse=True))
+        if self.amount_to_fetch:
+            self._posts = self._posts[: self.amount_to_fetch]
 
 
 def posts_as_schemas(posts_from_vk: list[dict]) -> list[Post]:
