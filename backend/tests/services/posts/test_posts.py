@@ -1,10 +1,3 @@
-# Тест на fetch_posts - нужен мок на асинхронный реквест, мда
-# Тест на posts_as_schemas - просто все
-# тест на то, что адрес не существует
-# тест на то, что указано amount_to_fetch
-# тест, что указано sort by likes или нет
-
-import json
 import datetime
 
 import pytest
@@ -13,23 +6,17 @@ from fastapi import HTTPException
 from backend.schemas import Post, PostPhoto, PostVideo
 from backend.services.posts.post_fetcher import PostFetcher
 
-# Нужен мок, в общем, который будет возвращать шаблоны того, что может прийти из VK
-# надо будет покурить, как это делается, по шаблону.
-
-# Мок возвратит count, и возвратит под этот count всякие данные.
-# Но надо же еще протестировать, если у нас больше чем 500 постов, чтобы они разделились
-
 
 def test_set_total_posts_in_domain(requests_mock):
     post_fetcher = PostFetcher("a_a_burlakov")
-    fake_count = 333
-    fake_response = {"response": {"count": fake_count}}
+    fake_total_posts_in_domain = 333
+    fake_response = {"response": {"count": fake_total_posts_in_domain}}
 
     requests_mock.get(post_fetcher._url_wall_get, json=fake_response)
 
     post_fetcher._set_total_posts_in_domain()
 
-    assert post_fetcher._total_posts_in_domain == fake_count
+    assert post_fetcher._total_posts_in_domain == fake_total_posts_in_domain
 
 
 def test_set_total_posts_in_domain_bad_response(requests_mock):

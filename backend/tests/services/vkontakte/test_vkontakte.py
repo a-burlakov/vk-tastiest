@@ -34,18 +34,19 @@ CRITICAL_ERRORS_CASES = [
 
 
 @pytest.mark.parametrize("non_critical_error", NON_CRITICAL_ERRORS_CASES)
-def test_vk_error_non_critical(non_critical_error):
+@pytest.mark.asyncio
+async def test_vk_error_non_critical(non_critical_error):
     error = VKError(non_critical_error, {})
 
     error.handle_error_sync()
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(error.handle_error_async())
+    await error.handle_error_async()
 
     assert True
 
 
 @pytest.mark.parametrize("critical_error", CRITICAL_ERRORS_CASES)
-def test_vk_error_critical(critical_error):
+@pytest.mark.asyncio
+async def test_vk_error_critical(critical_error):
     error = VKError(critical_error)
 
     try:
@@ -55,8 +56,7 @@ def test_vk_error_critical(critical_error):
         assert True
 
     try:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(error.handle_error_async())
+        await error.handle_error_async()
         assert False
     except HTTPException:
         assert True
@@ -64,7 +64,8 @@ def test_vk_error_critical(critical_error):
         assert False
 
 
-def test_vk_error_critical_100():
+@pytest.mark.asyncio
+async def test_vk_error_critical_100():
     domain = "test_domain"
     error = VKError(
         error={
@@ -81,8 +82,7 @@ def test_vk_error_critical_100():
         assert True
 
     try:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(error.handle_error_async())
+        await error.handle_error_async()
         assert False
     except HTTPException as exc:
         assert exc.detail == f"Человек/сообщество с адресом {domain} не найдены."

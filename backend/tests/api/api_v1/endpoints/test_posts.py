@@ -102,10 +102,7 @@ def test_get_posts_good_posts(client: TestClient, mocker, fake_good_posts) -> No
 @pytest.mark.parametrize("fake_bad_posts", FAKE_BAD_POSTS_CASES)
 def test_get_posts_bad_posts(client: TestClient, mocker, fake_bad_posts) -> None:
     """Returning non-valid data from endpoint."""
-    # mocker.patch(
-    #     "backend.services.posts.post_fetcher.PostFetcher.fetch_posts",
-    #     side_effect=None,
-    # )
+
     mocker.patch(
         "backend.services.posts.post_fetcher.PostFetcher.posts",
         new_callable=mocker.PropertyMock,
