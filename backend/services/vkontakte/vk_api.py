@@ -70,7 +70,7 @@ class VKError:
 
             return
 
-        self.handle_critical_error()
+        self._handle_critical_error()
 
     def handle_error_sync(self) -> None:
         """Check if the error is critical and raises an exception if it is."""
@@ -81,10 +81,10 @@ class VKError:
             time.sleep(0.1)
             return
 
-        self.handle_critical_error()
+        self._handle_critical_error()
 
-    def handle_critical_error(self):
-        """If the error is critical, raises an corresponding exception."""
+    def _handle_critical_error(self):
+        """If the error is critical, raises a corresponding exception."""
 
         # Specific critical errors.
         if self.error["error_code"] == 100:

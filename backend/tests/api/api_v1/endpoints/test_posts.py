@@ -95,7 +95,7 @@ def test_get_posts_good_posts(client: TestClient, mocker, fake_good_posts) -> No
         new_callable=mocker.PropertyMock,
         return_value=fake_good_posts,
     )
-    client.get(f"{settings.API_V1_STR}/posts?domain=a_a_burlakov")
+    client.get(f"{settings.API_V1_STR}/posts?domain=vk.com/a_a_burlakov")
     assert True
 
 
