@@ -3,13 +3,13 @@ import pydantic as pydantic
 from pydantic import Field
 
 
-class PostPhotos(pydantic.BaseModel):
+class PostPhoto(pydantic.BaseModel):
     """VK post photos data."""
 
     url: str = Field(description="Путь URL к фотографии")
 
 
-class PostVideos(pydantic.BaseModel):
+class PostVideo(pydantic.BaseModel):
     """VK post videos data."""
 
     first_frame_url: str = Field(description="Путь URL к первому кадру видео")
@@ -22,5 +22,5 @@ class Post(pydantic.BaseModel):
     likes: int = Field(description="Количество лайков")
     text: str = Field(description="Текст поста")
     path: str = Field(description="Путь URL к посту")
-    photos: list[PostPhotos] = Field(description="Фотографии в посте")
-    videos: list[PostVideos] = Field(description="Видео в посте")
+    photos: list[PostPhoto] = Field(description="Фотографии в посте")
+    videos: list[PostVideo] = Field(description="Видео в посте")

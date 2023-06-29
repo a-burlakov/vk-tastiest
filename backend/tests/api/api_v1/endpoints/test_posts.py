@@ -8,7 +8,7 @@ from backend.core.config import settings
 FAKE_GOOD_POSTS_CASES = [
     [
         {
-            "date": datetime.datetime.utcnow(),
+            "date": datetime.datetime(2023, 6, 29, 0, 1, 2),
             "likes": 123,
             "text": "text",
             "path": "path",
@@ -22,7 +22,7 @@ FAKE_GOOD_POSTS_CASES = [
             ],
         },
         {
-            "date": datetime.datetime.utcnow(),
+            "date": datetime.datetime(2023, 6, 29, 0, 1, 2),
             "likes": 444,
             "text": "text2",
             "path": "path3",
@@ -35,12 +35,12 @@ FAKE_GOOD_POSTS_CASES = [
 FAKE_BAD_POSTS_CASES = [
     [
         {
-            "date": datetime.datetime.utcnow(),
+            "date": datetime.datetime(2023, 6, 29, 0, 1, 2),
         },
     ],
     [
         {
-            "date": datetime.datetime.utcnow(),
+            "date": datetime.datetime(2023, 6, 29, 0, 1, 2),
             "liked": 123,
             "text": "text",
             "path": "path",
@@ -56,7 +56,7 @@ FAKE_BAD_POSTS_CASES = [
     ],
     [
         {
-            "date": datetime.datetime.utcnow(),
+            "date": datetime.datetime(2023, 6, 29, 0, 1, 2),
             "likes": 123,
             "text": "text",
             "path": "path",

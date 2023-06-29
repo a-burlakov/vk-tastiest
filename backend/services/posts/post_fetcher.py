@@ -5,7 +5,7 @@ import logging
 import asyncio
 from dataclasses import dataclass, field
 
-from backend.schemas.post import Post, PostPhotos, PostVideos
+from backend.schemas.post import Post, PostPhoto, PostVideo
 from backend.services.vkontakte.vk_api import (
     vk_synchronous_request,
     vk_asynchronous_request,
@@ -27,9 +27,11 @@ class PostFetcher:
     amount_to_fetch: int = 0  # If 0, will gather all posts.
     sort_by_likes: bool = False
 
-    _posts: list[Post] = field(default_factory=list)
     _url_wall_get = settings.VKAPI_URL + "wall.get"
+    _url_execute = settings.VKAPI_URL + "execute"
+
     _total_posts_in_domain: int = 0
+    _posts: list[Post] = field(default_factory=list)
 
     # Number of times to execute query via "/execute" method.
     _execution_times: int = 5
@@ -96,7 +98,7 @@ class PostFetcher:
                 "access_token": settings.VKAPI_TOKEN,
                 "code": vks_code,
             }
-            url = settings.VKAPI_URL + "execute"
+            url = self._url_execute
 
             # Posts fetching.
             resp_json = await vk_asynchronous_request(
@@ -178,14 +180,14 @@ def posts_as_schemas(posts_from_vk: list[dict]) -> list[Post]:
             for attachment in attachments:
                 if attachment["type"] == "photo":
                     try:
-                        photo = PostPhotos(url="")
+                        photo = PostPhoto(url="")
                         photo.url = attachment["photo"]["sizes"][-1]["url"]
                         post.photos.append(photo)
                     except KeyError as exc:
                         logger.error("No key %s for photo: %s", exc, post_from_vk)
 
                 elif attachment["type"] == "video":
-                    video = PostVideos(first_frame_url="")
+                    video = PostVideo(first_frame_url="")
                     video_from_vk = attachment["video"]
                     if "first_frame" in video_from_vk:
                         video.first_frame_url = video_from_vk["first_frame"][-1]["url"]
