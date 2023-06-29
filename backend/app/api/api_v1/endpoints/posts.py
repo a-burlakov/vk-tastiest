@@ -6,7 +6,7 @@ from backend.services.posts.post_fetcher import PostFetcher
 router = APIRouter()
 
 
-@router.get("", status_code=200)
+@router.get("", status_code=200, response_model=list[schemas.Post])
 async def get_posts(
     domain: str = Query(
         title="Адрес человека/сообщества",
