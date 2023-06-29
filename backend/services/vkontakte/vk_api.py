@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import requests
 import aiohttp
@@ -58,7 +58,7 @@ class VKError:
     # Error representation as it is from VK API as dict.
     error: dict
     # Custom request parameters that were in context at the request time.
-    params: dict
+    params: dict = field(default_factory=dict)
 
     async def handle_error_async(self) -> None:
         """Check if the error is critical and raises an exception if it is."""
@@ -88,7 +88,7 @@ class VKError:
 
         # Specific critical errors.
         if self.error["error_code"] == 100:
-            logger.info(self.error["error_msg"], self.params)
+            logger.info(self.error["error_msg"] + ", " + str(self.params))
             detail = self.error["error_msg"]
             if (
                 "owner_id is undefined" in self.error["error_msg"]
