@@ -116,6 +116,7 @@ def test_get_posts_bad_posts(client: TestClient, mocker, fake_bad_posts) -> None
         client.get(f"{settings.API_V1_STR}/posts?domain=a_a_burlakov")
     except ValidationError:
         assert True
-        return
-
-    assert False
+    except Exception:
+        assert False
+    else:
+        assert False
