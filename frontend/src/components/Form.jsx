@@ -130,7 +130,7 @@ const Form = () => {
                                     {post.photos.map((photo) => (
                                         <div key={photo.url}>
                                             <a href={"https://vk.com/"+post.path} target="_blank">
-                                                <img src={photo.url}/>
+                                                <img className="mb-1" src={photo.url}/>
                                             </a>
                                         </div>
                                     ))}
