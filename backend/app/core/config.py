@@ -4,7 +4,7 @@ import logging
 from dotenv import load_dotenv
 from pydantic import AnyHttpUrl, BaseSettings, validator
 
-load_dotenv()
+load_dotenv("app/.env")
 
 
 class Settings(BaseSettings):
@@ -38,7 +38,7 @@ class Settings(BaseSettings):
 
     class Config:
         case_sensitive = True
-        env_file = ".env"
+        env_file = "../.env"
         env_file_encoding = "utf-8"
 
 
