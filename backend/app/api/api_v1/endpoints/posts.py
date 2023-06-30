@@ -17,7 +17,7 @@ async def get_posts(
         title="Количество постов",
         description="Количество постов для загрузки (если 0, будут загружены все)",
         ge=0,
-        default=0,
+        default=500,
     ),
     sort_by_likes: bool = Query(
         title="Сортировать по лайкам",
