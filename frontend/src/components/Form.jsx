@@ -1,7 +1,7 @@
 import React, {useContext, useState} from 'react';
 import ErrorMessage from "./ErrorMessage";
 import Button from "./GetButton"
-import './App.css'
+import '../assets/App.css'
 import {defaultFormatUtc} from "moment";
 
 const Form = () => {
@@ -73,7 +73,7 @@ const Form = () => {
                                 </div>
                             </div>
                             <div className="field">
-                                <label className="label">Количество (10-1000)</label>
+                                <label className="label">Количество постов для показа (10-1000)</label>
                                 <div className="control">
                                     <input
                                         type="number"

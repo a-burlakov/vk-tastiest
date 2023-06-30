@@ -1,5 +1,5 @@
 
-import { ReactComponent as Loader } from "./loader.svg"
+import { ReactComponent as Loader } from "../assets/loader.svg"
 const Button = ({ text, loading, disabled }) => {
   return (
     <button className="button is-primary is-fullwidth" type="submit" disabled={disabled}>
