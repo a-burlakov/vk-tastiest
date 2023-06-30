@@ -2,11 +2,13 @@ import React, {useContext, useState} from 'react';
 import ErrorMessage from "./ErrorMessage";
 import Button from "./GetButton"
 import './App.css'
+import {defaultFormatUtc} from "moment";
+
 const Form = () => {
     const [vkdomain, setVkdomain] = useState("");
     const [postAmount, setPostAmount] = useState("");
- const [showLoader, setShowLoader] = useState(false)
-
+    const [showLoader, setShowLoader] = useState(false)
+    const [postsData, setPostsData] = useState([])
     const [errorMessage, setErrorMessage] = useState("");
 
     const getPosts = async () => {
@@ -15,16 +17,13 @@ const Form = () => {
             method: "GET",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
-                // "Accept": "application/json",
             },
         };
         var amountToFetch = 0
 
         if (postAmount == 0) {
-            console.log("Я в условии на 0")
-            amountToFetch = 500
+            amountToFetch = 100
         } else if (postAmount > 1000) {
-            console.log("Я в условии на больше 1000")
             amountToFetch = 1000
         } else {
             amountToFetch = postAmount
@@ -34,17 +33,17 @@ const Form = () => {
             domain: vkdomain,
             amount: amountToFetch,
         }
-        console.log(amountToFetch)
+
         const response = await fetch("/api/v1/posts" + "?" + new URLSearchParams(params), requestOptions);
         const data = await response.json();
 
         if (!response.ok) {
             setErrorMessage(data.detail);
         } else {
-            console.log(data)
-            // setToken(data.access_token);
+            setPostsData(data);
         }
-setShowLoader(false);
+
+        setShowLoader(false);
     };
 
     const handleGetPosts = (e) => {
@@ -53,49 +52,110 @@ setShowLoader(false);
     }
 
     return (
-        <div className="column">
-            <form className="box" onSubmit={handleGetPosts}>
-                <div className="field">
-                    <label className="label">Адрес человека или сообщества</label>
-                    <div className="control">
-                        <input
-                            type="text"
-                            placeholder="Например: vk.com/durov, vk.com/anime, durov, anime"
-                            value={vkdomain}
-                            onChange={(e) => setVkdomain(e.target.value)}
-                            className="input"
-                            required
-                        />
+
+        <div className="container">
+            <div className="container">
+                <div className="columns is-fullwidth is-centered">
+                    <div className="column is-half">
+                        <form className="box " onSubmit={handleGetPosts}>
+                            <div className="field">
+                                <label className="label">Адрес человека или
+                                    сообщества</label>
+                                <div className="control">
+                                    <input
+                                        type="text"
+                                        placeholder="Например: vk.com/durov, vk.com/anime, durov, anime"
+                                        value={vkdomain}
+                                        onChange={(e) => setVkdomain(e.target.value)}
+                                        className="input"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="field">
+                                <label className="label">Количество (10-1000)</label>
+                                <div className="control">
+                                    <input
+                                        type="number"
+                                        defaultValue={100}
+                                        onChange={(e) => setPostAmount(e.target.value)}
+                                        className="input"
+                                        required
+                                        min={1}
+                                        max={1000}
+                                        inputMode="numeric"
+                                        pattern="\d*"
+                                    />
+                                </div>
+                            </div>
+
+                            <ErrorMessage message={errorMessage}/>
+                            <br/>
+                            <Button
+                                text="Получить посты"
+                                loading={showLoader}
+                                disabled={showLoader}
+                            />
+
+                        </form>
                     </div>
                 </div>
-                <div className="field">
-                    <label className="label">Количество (10-1000)</label>
-                    <div className="control">
-                        <input
-                            type="number"
-                            defaultValue={100}
-                            onChange={(e) => setPostAmount(e.target.value)}
-                            className="input"
-                            required
-                            min={0}
-                            max={1000}
-                            inputMode="numeric"
-                            pattern="\d*"
-                        />
-                    </div>
+            </div>
+            <br/>
+
+            {postsData.length > 0 ? (
+                <div className="container ">
+                    {postsData.map((post) => (
+                        <div key={post.id}>
+
+
+                            <div className="box mb-5 is-half"
+                                 id="visualWall13168612_827">
+                                <div className="author">
+                                    <div className="go">
+                                        <a href={"https://vk.com/"+post.path}
+                                           target="_blank"
+                                           className="btn btn-default"><i
+                                            className="fa fa-vk"></i> открыть пост →</a>
+                                    </div>
+
+                                </div>
+                                <div className="text">
+                                    {post.text}
+                                </div>
+
+                                <br/>
+                                {/*{Date.prototype.fromisoformat(post.date)}*/}
+                                {/*{post.date}*/}
+                                {/*<div clas sName="attachments">*/}
+                                    {post.photos.map((photo) => (
+                                        <div key={photo.url}>
+                                            <a href={"https://vk.com/"+post.path} target="_blank">
+                                                <img src={photo.url}/>
+                                            </a>
+                                        </div>
+                                    ))}
+                                {/*</div>*/}
+
+                                <br/>
+                                <div className="counters">
+                                    <span className="likes"><i
+                                        className="fa fa-heart-o"></i> {post.likes}</span>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    ))}
                 </div>
 
-                <ErrorMessage message={errorMessage}/>
-                <br/>
-                <Button
-      text="Получить посты"
-      loading={showLoader}
-      disabled={showLoader}
-    />
+            ) : (<div></div>)}
 
-            </form>
         </div>
-    );
+
+
+    )
+        ;
 
 }
 

@@ -4,7 +4,6 @@ const Button = ({ text, loading, disabled }) => {
   return (
     <button className="button is-primary is-fullwidth" type="submit" disabled={disabled}>
       {!loading ? text : <Loader className="spinner" />}
-
     </button>
   )
 }
