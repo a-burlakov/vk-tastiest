@@ -1,7 +1,7 @@
 from typing import Any
 from fastapi import APIRouter
 
-from backend import schemas
+import schemas
 
 router = APIRouter()
 

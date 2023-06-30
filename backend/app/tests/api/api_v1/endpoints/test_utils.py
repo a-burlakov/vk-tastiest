@@ -4,7 +4,7 @@ import pytest
 from hypothesis import given
 from hypothesis.strategies import text
 
-from backend.core.config import settings
+from core.config import settings
 
 
 @pytest.mark.parametrize(

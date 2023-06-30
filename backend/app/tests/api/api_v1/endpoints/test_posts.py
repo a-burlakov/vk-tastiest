@@ -3,7 +3,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
-from backend.core.config import settings
+from core.config import settings
 
 FAKE_GOOD_POSTS_CASES = [
     [
@@ -76,7 +76,7 @@ FAKE_BAD_POSTS_CASES = [
 @pytest.fixture(autouse=True)
 def patch_post_fetcher(mocker):
     mocker.patch(
-        "backend.services.posts.post_fetcher.PostFetcher.fetch_posts",
+        "services.posts.post_fetcher.PostFetcher.fetch_posts",
         side_effect=None,
     )
 
@@ -91,7 +91,7 @@ def test_get_posts_no_parameters(client: TestClient) -> None:
 def test_get_posts_good_posts(client: TestClient, mocker, fake_good_posts) -> None:
     """Returning valid data from endpoint."""
     mocker.patch(
-        "backend.services.posts.post_fetcher.PostFetcher.posts",
+        "services.posts.post_fetcher.PostFetcher.posts",
         new_callable=mocker.PropertyMock,
         return_value=fake_good_posts,
     )
@@ -104,7 +104,7 @@ def test_get_posts_bad_posts(client: TestClient, mocker, fake_bad_posts) -> None
     """Returning non-valid data from endpoint."""
 
     mocker.patch(
-        "backend.services.posts.post_fetcher.PostFetcher.posts",
+        "services.posts.post_fetcher.PostFetcher.posts",
         new_callable=mocker.PropertyMock,
         return_value=fake_bad_posts,
     )

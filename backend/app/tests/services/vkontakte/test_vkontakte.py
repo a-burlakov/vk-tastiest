@@ -1,9 +1,7 @@
-import asyncio
-
 import pytest
 from fastapi import HTTPException
 
-from backend.services.vkontakte.vk_api import VKError
+from services.vkontakte.vk_api import VKError
 
 
 NON_CRITICAL_ERRORS_CASES = [

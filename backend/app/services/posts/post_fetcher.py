@@ -5,13 +5,13 @@ import logging
 import asyncio
 from dataclasses import dataclass, field
 
-from backend.schemas.post import Post, PostPhoto, PostVideo
-from backend.services.vkontakte.vk_api import (
+from schemas.post import Post, PostPhoto, PostVideo
+from services.vkontakte.vk_api import (
     vk_synchronous_request,
     vk_asynchronous_request,
 )
-from backend.services.vkontakte.vk_script import get_wall_post_template
-from backend.core.config import settings
+from services.vkontakte.vk_script import get_wall_post_template
+from core.config import settings
 
 logging.basicConfig(**settings.LOGGING_STANDARD_PARAMS)
 logger = logging.getLogger(__name__)

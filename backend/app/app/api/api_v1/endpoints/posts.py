@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query
 
-from backend import schemas
-from backend.services.posts.post_fetcher import PostFetcher
+from services.posts.post_fetcher import PostFetcher
+import schemas
 
 router = APIRouter()
 

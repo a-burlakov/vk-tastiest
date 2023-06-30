@@ -7,7 +7,7 @@ import requests
 import aiohttp
 import fastapi as _fastapi
 
-from backend.core.config import settings
+from core.config import settings
 
 logging.basicConfig(**settings.LOGGING_STANDARD_PARAMS)
 logger = logging.getLogger(__name__)

@@ -3,8 +3,8 @@ import datetime
 import pytest
 from fastapi import HTTPException
 
-from backend.schemas import Post, PostPhoto, PostVideo
-from backend.services.posts.post_fetcher import PostFetcher
+from schemas import Post, PostPhoto, PostVideo
+from services.posts.post_fetcher import PostFetcher
 
 
 def test_set_total_posts_in_domain(requests_mock):
