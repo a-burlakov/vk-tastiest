@@ -109,8 +109,7 @@ const Form = () => {
                         <div key={post.id}>
 
 
-                            <div className="box mb-5 is-half"
-                                 id="visualWall13168612_827">
+                            <div className="box mb-5 is-half">
                                 <div className="author">
                                     <div className="go">
                                         <a href={"https://vk.com/"+post.path}
