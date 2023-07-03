@@ -4,6 +4,7 @@ Made to practice:
 - React
 - synchronous and asynchronous requests
 - asyncio handling
+- logging
 - PyTest (mocking, hypothesis, parametrized, coverage)
 - .env handling 
 - docker
