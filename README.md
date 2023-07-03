@@ -36,4 +36,5 @@ Made to practice:
    $ docker-compose up
    ```
    
-5. Go to [localhost:80](localhost:80)
+5. Go to [localhost:80](http://localhost:80)
+5. *localhost:80
