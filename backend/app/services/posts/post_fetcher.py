@@ -125,10 +125,6 @@ class PostFetcher:
         if not self._total_posts_in_domain:
             return
 
-        # amount_to_fetch = self._total_posts_in_domain
-        # if self.amount_to_fetch:
-        #     amount_to_fetch = self.amount_to_fetch
-
         # Creating tasks for fetching.
         tasks = []
         posts_per_task = self._posts_per_portion * self._execution_times
