@@ -8,13 +8,17 @@ load_dotenv("app/.env")
 
 
 class Settings(BaseSettings):
-    API_V1_STR: str = "/api/v1"
+    # API_V1_STR: str = "/api/v1"
+    API_V1_STR: str = ""
     SECRET_KEY: str = secrets.token_urlsafe(32)
 
     # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
     # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
     # "http://localhost:8080", "http://local.dockertoolbox.tiangolo.com"]'
-    BACKEND_CORS_ORIGINS: list[AnyHttpUrl] = ["http://localhost:3000"]
+    # BACKEND_CORS_ORIGINS: list[AnyHttpUrl] = ["http://localhost:3000"]
+    BACKEND_CORS_ORIGINS: list[AnyHttpUrl] = [
+        "http://localhost:80",
+    ]
 
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v: str | list[str]) -> list[str] | str:
@@ -28,7 +32,9 @@ class Settings(BaseSettings):
 
     VKAPI_URL = "https://api.vk.com/method/"
     VKAPI_VERSION = "5.131"
-    VKAPI_TOKEN: str
+    VKAPI_TOKEN: str = (
+        "ed52a625ed52a625ed52a6252eee461ffbeed52ed52a62589c8f057c4ad4cf28e7d8a73"
+    )
 
     LOGGING_STANDARD_PARAMS = {
         "level": logging.INFO,
