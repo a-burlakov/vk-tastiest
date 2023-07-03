@@ -5,9 +5,11 @@ Made to practice:
 - synchronous and asynchronous requests
 - asyncio handling
 - PyTest (mocking, hypothesis, parametrized, coverage)
+- .env handling 
 - docker
 - docker-compose
 - deploying
+- linux terminal
 - PyCharm Pro features
 
 ![](docs/demonstration.gif)
@@ -23,9 +25,15 @@ Made to practice:
    $ cd vk-tastiest
    ```
 
-3. Run docker-compose.
+3. Create .env-file at `/backend/app/` with `VKAPI_TOKEN` variable. You can use mine:
+
+   ```sh
+   $ echo "VKAPI_TOKEN=ed52a625ed52a625ed52a6252eee461ffbeed52ed52a62589c8f057c4ad4cf28e7d8a73" > backend/app/.env
+   ```
+
+4. Run docker-compose.
    ```sh
    $ docker-compose up
    ```
    
-4. Go to [localhost:80](localhost:80)
+5. Go to [localhost:80](localhost:80)
