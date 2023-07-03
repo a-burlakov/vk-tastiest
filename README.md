@@ -14,8 +14,9 @@ Made to practice:
 
 <div align="center">
   <a href="http://vktastiest.ru">
-    <img src="docs/demonstration.gif" >
+    <img src="docs/demonstration.gif">
   </a>
+</div>
 
 ### Installation
 1. Clone the repo.
