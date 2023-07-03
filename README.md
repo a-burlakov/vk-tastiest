@@ -12,7 +12,10 @@ Made to practice:
 - linux terminal
 - PyCharm Pro features
 
-![](docs/demonstration.gif)
+<div align="center">
+  <a href="http://vktastiest.ru">
+    <img src="docs/demonstration.gif" >
+  </a>
 
 ### Installation
 1. Clone the repo.
