@@ -14,7 +14,7 @@ Made to practice:
 
 <div align="center">
   <a href="http://vktastiest.ru">
-    <img src="docs/demonstration.gif">
+    <img src="docs/demo.gif">
   </a>
 </div>
 
