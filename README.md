@@ -37,4 +37,3 @@ Made to practice:
    ```
    
 5. Go to [localhost:80](http://localhost:80)
-5. *localhost:80
