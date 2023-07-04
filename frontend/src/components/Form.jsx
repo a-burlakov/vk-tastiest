@@ -73,7 +73,8 @@ const Form = () => {
                                 </div>
                             </div>
                             <div className="field">
-                                <label className="label">Количество постов для показа (10-1000)</label>
+                                <label className="label">Количество постов для показа
+                                    (10-1000)</label>
                                 <div className="control">
                                     <input
                                         type="number"
@@ -112,7 +113,7 @@ const Form = () => {
                             <div className="box mb-5 is-half">
                                 <div className="author">
                                     <div className="go">
-                                        <a href={"https://vk.com/"+post.path}
+                                        <a href={"https://vk.com/" + post.path}
                                            target="_blank"
                                            className="btn btn-default"><i
                                             className="fa fa-vk"></i> открыть пост →</a>
@@ -125,24 +126,36 @@ const Form = () => {
 
                                 <br/>
                                 {/*{Date.prototype.fromisoformat(post.date)}*/}
-                                {/*{post.date}*/}
-                                {/*<div clas sName="attachments">*/}
-                                    {post.photos.map((photo) => (
-                                        <div key={photo.url}>
-                                            <a href={"https://vk.com/"+post.path} target="_blank">
-                                                <img className="mb-1" src={photo.url}/>
-                                            </a>
-                                        </div>
-                                    ))}
-                                {/*</div>*/}
 
+                                {/*<div clas sName="attachments">*/}
+                                {post.photos.map((photo) => (
+                                    <div key={photo.url}>
+                                        <a href={"https://vk.com/" + post.path}
+                                           target="_blank">
+                                            <img className="mb-1" src={photo.url}/>
+                                        </a>
+                                    </div>
+                                ))}
+                                {/*</div>*/}
+                                {post.videos.map((video) => (
+                                    <div key={video.first_frame_url}>
+                                        <a href={"https://vk.com/" + post.path}
+                                           target="_blank">
+                                            <img className="mb-1"
+                                                 src={video.first_frame_url}/>
+                                        </a>
+                                    </div>
+                                ))}
                                 <br/>
                                 <div className="counters">
-                                    <span className="likes"><i
-                                        className="fa fa-heart-o"></i> {post.likes}</span>
+                                    <span className="likes">
+                                        <i className="fa fa-heart-o"></i> {post.likes}
+                                    </span>
+                                    <span className="date">
+                                        <p>{post.date.slice(0,10) + " в " + post.date.slice(11, 16)}</p>
+                                    </span>
                                 </div>
                             </div>
-
 
                         </div>
                     ))}
