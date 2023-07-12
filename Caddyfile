@@ -1,6 +1,4 @@
-vktastiest.ru {
-    reverse_proxy frontend:80
-}
+:443
 
 handle_path /api/v1/* {
 	reverse_proxy backend:8000 {
