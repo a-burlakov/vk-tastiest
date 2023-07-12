@@ -8,9 +8,16 @@ handle_path /api/v1/* {
     }
 }
 
-vktastiest.ru {
+handle {
         root * /usr/share/caddy/
         try_files {path} {file} /index.html
         file_server
+}
+
+vktastiest.ru {
+        root * /var/www
+        encode gzip
+        file_server
+        tls mail@vktastiest.ru
 }
 
