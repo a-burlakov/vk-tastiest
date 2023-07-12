@@ -1,5 +1,5 @@
 vktastiest.ru {
-    root /usr/share/caddy/
+    root * /usr/share/caddy/
 }
 
 handle_path /api/v1/* {
