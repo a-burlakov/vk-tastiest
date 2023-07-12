@@ -1,4 +1,4 @@
-vktastiest.ru:443
+vktastiest.ru
 
 {
 
@@ -16,9 +16,7 @@ vktastiest.ru:443
             file_server
     }
 
-    tls {
-        dns ns1.reg.ru
-    }
+    tls fln@mail.ru
 
 }
 
