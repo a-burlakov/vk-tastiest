@@ -1,4 +1,4 @@
-vktastiest.ru:80
+vktastiest.ru:443
 
 {
 
@@ -14,6 +14,10 @@ vktastiest.ru:80
             root * /usr/share/caddy/
             try_files {path} {file} /index.html
             file_server
+    }
+
+    tls {
+        dns ns1.reg.ru
     }
 
 }
