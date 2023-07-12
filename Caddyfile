@@ -1,22 +1,16 @@
-vktastiest.ru:80
+:80
 
-{
-
-    handle_path /api/v1/* {
-        reverse_proxy backend:8000 {
-            header_up Host {upstream_hostport}
-            header_up X-Real-IP {remote_addr}
-            header_up X-Forwarded-Host {host}
-        }
+handle_path /api/v1/* {
+	reverse_proxy backend:8000 {
+        header_up Host {upstream_hostport}
+        header_up X-Real-IP {remote_addr}
+        header_up X-Forwarded-Host {host}
     }
+}
 
-    handle {
-            root * /usr/share/caddy/
-            try_files {path} {file} /index.html
-            file_server
-    }
-
-    tls fln@mail.ru
-
+handle {
+        root * /usr/share/caddy/
+        try_files {path} {file} /index.html
+        file_server
 }
 
