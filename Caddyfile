@@ -14,10 +14,8 @@ handle {
         file_server
 }
 
-vktastiest.ru {
-        root * /var/www
-        encode gzip
-        file_server
-        tls mail@vktastiest.ru
+http:// {
+    root * /var/www
+    encode gzip
+    file_server
 }
-
