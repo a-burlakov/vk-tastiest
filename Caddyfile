@@ -1,4 +1,6 @@
-vktastiest.ru
+vktastiest.ru {
+    root /usr/share/caddy/vktastiest.ru
+}
 
 handle_path /api/v1/* {
 	reverse_proxy backend:8000 {
