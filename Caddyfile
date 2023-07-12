@@ -1,4 +1,9 @@
-:80
+vktastiest.ru {
+        root * /var/www
+        encode gzip
+        file_server
+        tls my-mail@vktastiest.ru
+}
 
 handle_path /api/v1/* {
 	reverse_proxy backend:8000 {
@@ -14,8 +19,5 @@ handle {
         file_server
 }
 
-http:// {
-    root * /var/www
-    encode gzip
-    file_server
-}
+
+
