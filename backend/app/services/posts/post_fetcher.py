@@ -6,10 +6,7 @@ import asyncio
 from dataclasses import dataclass, field
 
 from schemas.post import Post, PostPhoto, PostVideo
-from services.vkontakte.vk_api import (
-    vk_synchronous_request,
-    vk_asynchronous_request,
-)
+from services.vkontakte.vk_api import vk_asynchronous_request
 from services.vkontakte.vk_script import get_wall_post_template
 from core.config import settings
 
@@ -47,11 +44,9 @@ class PostFetcher:
     def posts(self) -> list[Post]:
         return self._posts
 
-    def _set_total_posts_in_domain(self) -> None:
-        """Sets "_total_posts" as amount of posts in the VK domain.
-        Not asynchronous as it quickly gets amount of posts to fetch,
-        and the amount is used to create asynchronous tasks.
-        """
+    async def _set_total_posts_in_domain(self) -> None:
+        """Sets "_total_posts" as amount of posts in the VK domain."""
+
         logger.info('Getting total posts in "vk.com/%s"...', self.vk_domain)
 
         params = {
@@ -62,7 +57,7 @@ class PostFetcher:
         }
 
         # Data fetching.
-        response = vk_synchronous_request(
+        response = await vk_asynchronous_request(
             self._url_wall_get,
             params,
             domain=self.vk_domain,
@@ -121,7 +116,7 @@ class PostFetcher:
             return posts
 
         # Checks and preparations.
-        self._set_total_posts_in_domain()
+        await self._set_total_posts_in_domain()
         if not self._total_posts_in_domain:
             return
 
