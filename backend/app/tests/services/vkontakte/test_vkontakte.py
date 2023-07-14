@@ -36,8 +36,7 @@ CRITICAL_ERRORS_CASES = [
 async def test_vk_error_non_critical(non_critical_error):
     error = VKError(non_critical_error, {})
 
-    error.handle_error_sync()
-    await error.handle_error_async()
+    await error.handle_error()
 
     assert True
 
@@ -48,13 +47,7 @@ async def test_vk_error_critical(critical_error):
     error = VKError(critical_error)
 
     try:
-        error.handle_error_sync()
-        assert False
-    except HTTPException:
-        assert True
-
-    try:
-        await error.handle_error_async()
+        await error.handle_error()
         assert False
     except HTTPException:
         assert True
@@ -74,13 +67,7 @@ async def test_vk_error_critical_100():
     )
 
     try:
-        error.handle_error_sync()
-        assert False
-    except HTTPException:
-        assert True
-
-    try:
-        await error.handle_error_async()
+        await error.handle_error()
         assert False
     except HTTPException as exc:
         assert exc.detail == f"Человек/сообщество с адресом {domain} не найдены."

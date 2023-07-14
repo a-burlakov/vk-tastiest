@@ -7,43 +7,26 @@ from schemas import Post, PostPhoto, PostVideo
 from services.posts.post_fetcher import PostFetcher
 
 
-def test_set_total_posts_in_domain(requests_mock):
-    post_fetcher = PostFetcher("a_a_burlakov")
-    fake_total_posts_in_domain = 333
-    fake_response = {"response": {"count": fake_total_posts_in_domain}}
-
-    requests_mock.get(post_fetcher._url_wall_get, json=fake_response)
-
-    post_fetcher._set_total_posts_in_domain()
-
-    assert post_fetcher._total_posts_in_domain == fake_total_posts_in_domain
-
-
-def test_set_total_posts_in_domain_bad_response(requests_mock):
-    post_fetcher = PostFetcher("a_a_burlakov")
-    fake_response = {
-        "error": {
-            "error_code": 42,
-            "error_msg": "how could you",
-        },
-    }
-    requests_mock.get(post_fetcher._url_wall_get, json=fake_response)
-
-    try:
-        post_fetcher._set_total_posts_in_domain()
-    except HTTPException:
-        assert True
-    else:
-        assert False
-
-
 class MockAsyncResponse:
-    def __init__(self, _json, status):
-        self._json = _json
+    """
+    Helps mock several async responses in a row.
+    For each call returns the results from the collection "_json" in order.
+    """
+
+    def __init__(self, _jsons, status):
+        if isinstance(_jsons, (tuple, list)):
+            self._jsons = _jsons
+        else:
+            self._jsons = [
+                _jsons,
+            ]
         self.status = status
+        self.count = 0
 
     async def json(self):
-        return self._json
+        json_to_return = self._jsons[self.count]
+        self.count += 1
+        return json_to_return
 
     async def __aexit__(self, exc_type, exc, tb):
         pass
@@ -53,7 +36,41 @@ class MockAsyncResponse:
 
 
 @pytest.mark.asyncio
-async def test_fetch_posts(mocker, requests_mock):
+async def test_set_total_posts_in_domain(mocker):
+    post_fetcher = PostFetcher("a_a_burlakov")
+    fake_total_posts_in_domain = 333
+    fake_response = {"response": {"count": fake_total_posts_in_domain}}
+
+    resp = MockAsyncResponse(fake_response, status=200)
+    mocker.patch("aiohttp.ClientSession.get", return_value=resp)
+
+    await post_fetcher._set_total_posts_in_domain()
+
+    assert post_fetcher._total_posts_in_domain == fake_total_posts_in_domain
+
+
+@pytest.mark.asyncio
+async def test_set_total_posts_in_domain_bad_response(mocker):
+    post_fetcher = PostFetcher("a_a_burlakov")
+    fake_response = {
+        "error": {
+            "error_code": 42,
+            "error_msg": "how could you",
+        },
+    }
+    resp = MockAsyncResponse(fake_response, status=200)
+    mocker.patch("aiohttp.ClientSession.get", return_value=resp)
+
+    try:
+        await post_fetcher._set_total_posts_in_domain()
+    except HTTPException:
+        assert True
+    else:
+        assert False
+
+
+@pytest.mark.asyncio
+async def test_fetch_posts(mocker):
     # Fake responses.
     fake_total_posts_in_domain = 42
     fake_response_count = {"response": {"count": fake_total_posts_in_domain}}
@@ -137,11 +154,8 @@ async def test_fetch_posts(mocker, requests_mock):
     amount_to_fetch = 50
     post_fetcher = PostFetcher("vk_com/a_a_burlakov", amount_to_fetch)
 
-    # Mocked synchronous call.
-    requests_mock.get(post_fetcher._url_wall_get, json=fake_response_count)
-
     # Mocked asynchronous call.
-    resp = MockAsyncResponse(fake_response_posts, status=200)
+    resp = MockAsyncResponse((fake_response_count, fake_response_posts), status=200)
     mocker.patch("aiohttp.ClientSession.get", return_value=resp)
 
     # Starting fetching.
