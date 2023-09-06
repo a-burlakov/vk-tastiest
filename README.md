@@ -1,5 +1,5 @@
 ## 💙 VK Tastiest 🏆 - most-liked VK posts for group/person
-Made to practice:
+Made for fun and to practice:
 - FastAPI
 - React
 - synchronous and asynchronous requests
