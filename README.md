@@ -1,5 +1,5 @@
 ## 💙 VK Tastiest 🏆 - most-liked VK posts for group/person
-Made for fun and to **React** (I'm not frontender but that was interesting).
+Made for fun and to practice **React** integration (I'm not frontender but that was interesting).
 
 <div align="center">
   <a href="http://vktastiest.ru">
