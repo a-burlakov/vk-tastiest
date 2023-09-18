@@ -1,17 +1,5 @@
 ## 💙 VK Tastiest 🏆 - most-liked VK posts for group/person
-Made for fun and to practice:
-- FastAPI
-- React
-- synchronous and asynchronous requests
-- asyncio handling
-- logging
-- PyTest (mocking, hypothesis, parametrized, coverage)
-- .env handling 
-- docker
-- docker-compose
-- deploying
-- linux terminal
-- PyCharm Pro features
+Made for fun and to **React** (I'm not frontender but that was interesting).
 
 <div align="center">
   <a href="http://vktastiest.ru">
