@@ -18,7 +18,7 @@ Made for fun and to practice **React** integration (I'm not frontender but that 
    $ cd vk-tastiest
    ```
 
-3. Create .env-file at `/backend/app/` with `VKAPI_TOKEN` variable. You can use mine:
+3. Create .env-file at `/backend/app/` with `VKAPI_TOKEN` variable. You can use mine, I don't mind:
 
    ```sh
    $ echo "VKAPI_TOKEN=ed52a625ed52a625ed52a6252eee461ffbeed52ed52a62589c8f057c4ad4cf28e7d8a73" > backend/app/.env
